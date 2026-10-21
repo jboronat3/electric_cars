@@ -38,6 +38,30 @@
       <h2 id="titulo-resultados">Coste total</h2>
       <div class="tarjetas" id="tarjetas"></div>
 
+      <div class="panel" id="compensa">
+        <h2>¿Cuándo compensa?</h2>
+        <div class="controles">
+          <label>Comparar
+            <select id="compensa-coche">
+              <option value="electrico">el eléctrico</option>
+              <option value="hibrido">el híbrido enchufable</option>
+            </select>
+            frente al de gasolina
+          </label>
+          <label>Quiero amortizarlo en
+            <input type="number" id="compensa-objetivo" value="7" min="1" max="30" step="1" inputmode="numeric">
+            años
+          </label>
+        </div>
+        <div class="cifras">
+          <div><span class="etiqueta">Pagas de más al comprar</span><span class="valor" id="c-sobrecoste"></span><span class="detalle">precio − ayudas + cargador</span></div>
+          <div><span class="etiqueta">Ahorras cada año</span><span class="valor" id="c-ahorro"></span><span class="detalle" id="c-ahorro-detalle"></span></div>
+          <div><span class="etiqueta">Se amortiza en</span><span class="valor" id="c-anios"></span><span class="detalle" id="c-anios-detalle"></span></div>
+        </div>
+        <p class="formula" id="c-formula"></p>
+        <p class="veredicto" id="c-veredicto"></p>
+      </div>
+
       <div class="panel">
         <h2>Gasto acumulado año a año</h2>
         <div id="grafica"></div>

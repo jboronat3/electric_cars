@@ -77,6 +77,8 @@
   const form = document.getElementById("formulario");
   const campo = (grupo, clave) => document.getElementById(grupo + "-" + clave);
   const selector = (grupo) => document.getElementById("modelo-" + grupo);
+  const compensaCoche = document.getElementById("compensa-coche");
+  const compensaObjetivo = document.getElementById("compensa-objetivo");
 
   // --- Formulario -----------------------------------------------------------
 
@@ -136,9 +138,11 @@
   // --- Guardado en el navegador ----------------------------------------------
   // localStorage puede fallar (modo privado, almacenamiento bloqueado): la app sigue funcionando.
 
+  const GUARDABLES = "#formulario input, #compensa input, #compensa select";
+
   function guardar() {
     const valores = {};
-    form.querySelectorAll("input").forEach((i) => { valores[i.id] = i.value; });
+    document.querySelectorAll(GUARDABLES).forEach((i) => { valores[i.id] = i.value; });
     const modelos = {};
     for (const grupo of COCHES) modelos[grupo] = selector(grupo).value;
     try { localStorage.setItem(CLAVE_GUARDADO, JSON.stringify({ valores, modelos })); } catch (e) { /* sin guardado */ }
@@ -150,8 +154,9 @@
     if (!guardado || !guardado.valores) return false;
     for (const [id, valor] of Object.entries(guardado.valores)) {
       const input = document.getElementById(id);
-      if (input) input.value = valor;
+      if (input && input.matches(GUARDABLES)) input.value = valor;
     }
+    if (!compensaCoche.value) compensaCoche.value = "electrico";
     for (const grupo of COCHES) {
       const id = guardado.modelos && guardado.modelos[grupo];
       if (id && [...selector(grupo).options].some((o) => o.value === id)) selector(grupo).value = id;
@@ -166,6 +171,53 @@
     if (a.anios === 0) return "más barato desde el primer día";
     return `se amortiza en ${decimal.format(a.anios)} años (${numero.format(a.km)} km)`;
   }
+
+  // Sección "¿Cuándo compensa?": sobrecoste, ahorro anual, años y km necesarios.
+  function pintarCompensa(datos) {
+    const clave = compensaCoche.value;
+    const objetivo = Math.min(Calculadora.HORIZONTE_MAX, Math.max(1, Math.round(parseFloat(compensaObjetivo.value) || 1)));
+    const c = Calculadora.compensa(datos, clave, objetivo);
+    const nombre = clave === "electrico" ? "el eléctrico" : "el híbrido enchufable";
+    const signo = (v) => (v < 0 ? "−" : "") + euros.format(Math.abs(v));
+
+    document.getElementById("c-sobrecoste").textContent = signo(c.sobrecoste);
+    document.getElementById("c-ahorro").textContent = signo(c.ahorroAnual) + "/año";
+    document.getElementById("c-ahorro-detalle").textContent =
+      `${signo(c.ahorroEnergia)} en energía y ${signo(c.ahorroFijo)} en mantenimiento, seguro e impuesto`;
+
+    let anios, aniosDetalle = "";
+    if (c.sobrecoste <= 0) anios = "Desde el día 1";
+    else if (c.anios === null) anios = `Más de ${Calculadora.HORIZONTE_MAX} años`;
+    else {
+      anios = `${decimal.format(c.anios)} años`;
+      aniosDetalle = `${numero.format(c.anios * datos.comun.kmAnuales)} km recorridos`;
+    }
+    document.getElementById("c-anios").textContent = anios;
+    document.getElementById("c-anios-detalle").textContent = aniosDetalle;
+
+    document.getElementById("c-formula").textContent = c.sobrecoste > 0 && c.ahorroAnual > 0
+      ? `${euros.format(c.sobrecoste)} ÷ ${euros.format(c.ahorroAnual)}/año ≈ ${decimal.format(c.sobrecoste / c.ahorroAnual)} años. ` +
+        "La cifra exacta de arriba tiene en cuenta que la luz y la gasolina suben cada año."
+      : "";
+
+    const veredicto = document.getElementById("c-veredicto");
+    const kmTuyos = numero.format(datos.comun.kmAnuales);
+    let texto;
+    if (c.sobrecoste <= 0) {
+      texto = `${mayuscula(nombre)} ya es más barato de comprar que el de gasolina: compensa desde el primer día.`;
+    } else if (c.kmNecesarios === 0) {
+      texto = `Se amortiza en ${objetivo} años o menos con cualquier kilometraje: el ahorro en mantenimiento, seguro e impuesto ya cubre el sobrecoste.`;
+    } else if (c.kmNecesarios === null) {
+      texto = `Con estos precios ${nombre} no gasta menos por km que el de gasolina, así que no se amortiza en ${objetivo} años por muchos km que hagas.`;
+    } else {
+      texto = `Para amortizarlo en ${objetivo} años necesitas hacer al menos ${numero.format(Math.ceil(c.kmNecesarios))} km al año. ` +
+        (c.compensa ? `Con tus ${kmTuyos} km/año, sí compensa.` : `Con tus ${kmTuyos} km/año, no compensa en ese plazo.`);
+    }
+    veredicto.textContent = texto;
+    veredicto.className = "veredicto " + (c.compensa || c.sobrecoste <= 0 ? "si" : "no");
+  }
+
+  const mayuscula = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
   function pintarTarjetas(r, datos) {
     const tarjetas = COCHES.map((c) => {
@@ -259,6 +311,7 @@
     const datos = leerDatos();
     const r = Calculadora.comparar(datos);
     pintarTarjetas(r, datos);
+    pintarCompensa(datos);
     pintarGrafica(r);
     pintarDesglose(r);
     guardar();
@@ -283,9 +336,12 @@
     }
   });
   form.addEventListener("submit", (ev) => ev.preventDefault());
+  document.getElementById("compensa").addEventListener("input", actualizar);
   document.getElementById("restablecer").addEventListener("click", () => {
     try { localStorage.removeItem(CLAVE_GUARDADO); } catch (e) { /* sin guardado */ }
     valoresPorDefecto();
+    compensaCoche.value = "electrico";
+    compensaObjetivo.value = 7;
     actualizar();
   });
 

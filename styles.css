@@ -152,6 +152,34 @@ input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
 .tarjeta.hibrido .valor { color: var(--hibrido); }
 .tarjeta.ganador { border: 2px solid var(--acento); }
 
+#compensa .controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-bottom: 16px;
+}
+#compensa .controles label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+#compensa .controles input { width: 64px; }
+#compensa .cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 12px;
+}
+#compensa .cifras > div { display: flex; flex-direction: column; gap: 2px; }
+#compensa .etiqueta, #compensa .detalle { color: var(--texto-suave); font-size: 0.85rem; }
+#compensa .valor { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+#compensa .formula { color: var(--texto-suave); font-size: 0.9rem; margin: 0 0 12px; }
+.veredicto {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  border-left: 4px solid;
+}
+.veredicto.si { border-color: var(--electrico); background: color-mix(in srgb, var(--electrico) 12%, transparent); }
+.veredicto.no { border-color: var(--gasolina); background: color-mix(in srgb, var(--gasolina) 12%, transparent); }
+
 #grafica svg { width: 100%; height: auto; display: block; }
 .rejilla { stroke: var(--borde); stroke-width: 1; }
 .eje { fill: var(--texto-suave); font-size: 12px; }

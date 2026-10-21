@@ -9,6 +9,7 @@ Webapp que compara el coste total de propiedad de un coche eléctrico, un híbri
 - **Coste total a N años**: compra − ayudas + cargador + energía + mantenimiento + seguro + impuesto − valor de reventa.
 - **Gráfica año a año** del gasto acumulado de cada coche.
 - **Punto de amortización** del eléctrico y del híbrido frente al de gasolina: en qué año y con cuántos km pasan a ser más baratos.
+- **¿Cuándo compensa?**: sobrecoste inicial ÷ ahorro anual, y el cálculo inverso: cuántos km al año necesitas para amortizar el eléctrico (o el híbrido) en los años que elijas.
 
 Los resultados se recalculan al momento, y los datos se guardan en el navegador (botón *Restablecer valores* para volver a los de fábrica).
 

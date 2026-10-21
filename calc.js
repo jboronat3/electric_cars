@@ -70,6 +70,51 @@
     return null;
   }
 
+  // Horizonte para buscar la amortización más allá de los años elegidos.
+  const HORIZONTE_MAX = 30;
+
+  // ¿Cuándo compensa `clave` (electrico o hibrido) frente al de gasolina?
+  // Devuelve el sobrecoste inicial, el ahorro del primer año, los años para amortizar
+  // y los km al año necesarios para amortizarlo en `objetivoAnios`.
+  function compensa(datos, clave, objetivoAnios) {
+    const { comun } = datos;
+    const coche = clave === "electrico" ? { ...datos.electrico, porcentajeElectrico: 100 } : datos[clave];
+    const gasolina = { ...datos.gasolina, porcentajeElectrico: 0 };
+    const inicial = (c) => c.precio - c.ayudas + (c.instalacion ?? 0);
+    const fijos = (c) => c.mantenimiento + c.seguro + c.impuesto;
+
+    const sobrecoste = inicial(coche) - inicial(gasolina);
+    const ahorroFijo = fijos(gasolina) - fijos(coche);
+    const ahorroKm = costeKm(gasolina, comun) - costeKm(coche, comun);
+    const ahorroEnergia = ahorroKm * comun.kmAnuales;
+
+    const largo = { ...comun, anios: Math.max(comun.anios, HORIZONTE_MAX) };
+    const anios = puntoAmortizacion(
+      calcularCoche(coche, largo).acumulado,
+      calcularCoche(gasolina, largo).acumulado);
+
+    // sobrecoste = Σ (ahorroFijo + km · ahorroKm · subida^(a-1)), para a = 1..objetivoAnios
+    let sumaFactores = 0;
+    for (let a = 1; a <= objetivoAnios; a++) {
+      sumaFactores += Math.pow(1 + comun.subidaEnergia / 100, a - 1);
+    }
+    const pendiente = sobrecoste - objetivoAnios * ahorroFijo;
+    let kmNecesarios;
+    if (pendiente <= 0) kmNecesarios = 0;           // compensa con cualquier kilometraje
+    else if (ahorroKm <= 0) kmNecesarios = null;    // no compensa con ningún kilometraje
+    else kmNecesarios = pendiente / (ahorroKm * sumaFactores);
+
+    return {
+      sobrecoste,
+      ahorroFijo,
+      ahorroEnergia,
+      ahorroAnual: ahorroFijo + ahorroEnergia,
+      anios,
+      kmNecesarios,
+      compensa: kmNecesarios !== null && comun.kmAnuales >= kmNecesarios,
+    };
+  }
+
   // datos: { comun, electrico, hibrido, gasolina }
   // Las amortizaciones se calculan frente al coche de gasolina.
   function comparar(datos) {
@@ -94,7 +139,7 @@
     return { coches, amortizacion, ahorro, masBarato };
   }
 
-  const api = { comparar, costeKm, precioKwhMedio, puntoAmortizacion };
+  const api = { comparar, compensa, costeKm, precioKwhMedio, puntoAmortizacion, HORIZONTE_MAX };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.Calculadora = api;
 })(this);
