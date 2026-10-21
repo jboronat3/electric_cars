@@ -185,15 +185,23 @@
     document.getElementById("c-ahorro-detalle").textContent =
       `${signo(c.ahorroEnergia)} en energía y ${signo(c.ahorroFijo)} en mantenimiento, seguro e impuesto`;
 
-    let anios, aniosDetalle = "";
-    if (c.sobrecoste <= 0) anios = "Desde el día 1";
-    else if (c.anios === null) anios = `Más de ${Calculadora.HORIZONTE_MAX} años`;
-    else {
+    const ritmo = `a tu ritmo de ${numero.format(datos.comun.kmAnuales)} km/año`;
+    let anios, km, detalle = ritmo;
+    if (c.sobrecoste <= 0) {
+      anios = "Desde el día 1";
+      km = "0 km";
+      detalle = "";
+    } else if (c.anios === null) {
+      anios = `Más de ${Calculadora.HORIZONTE_MAX} años`;
+      km = `Más de ${numero.format(Calculadora.HORIZONTE_MAX * datos.comun.kmAnuales)} km`;
+    } else {
       anios = `${decimal.format(c.anios)} años`;
-      aniosDetalle = `${numero.format(c.anios * datos.comun.kmAnuales)} km recorridos`;
+      km = `${numero.format(Math.round(c.anios * datos.comun.kmAnuales / 100) * 100)} km`;
     }
     document.getElementById("c-anios").textContent = anios;
-    document.getElementById("c-anios-detalle").textContent = aniosDetalle;
+    document.getElementById("c-anios-detalle").textContent = detalle;
+    document.getElementById("c-km").textContent = km;
+    document.getElementById("c-km-detalle").textContent = detalle;
 
     document.getElementById("c-formula").textContent = c.sobrecoste > 0 && c.ahorroAnual > 0
       ? `${euros.format(c.sobrecoste)} ÷ ${euros.format(c.ahorroAnual)}/año ≈ ${decimal.format(c.sobrecoste / c.ahorroAnual)} años. ` +
