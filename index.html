@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Eléctrico vs Gasolina</title>
-  <meta name="description" content="Compara el coste total de un coche eléctrico nuevo frente a uno de gasolina nuevo.">
+  <meta name="description" content="Compara el coste total de un coche eléctrico, un híbrido enchufable y uno de gasolina nuevos.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,34 +16,27 @@
   <main>
     <form id="formulario" class="paneles" autocomplete="off">
       <fieldset class="panel" id="panel-comun">
-        <legend>Tu uso</legend>
+        <legend>Tu uso y precios de la energía</legend>
       </fieldset>
       <fieldset class="panel electrico" id="panel-electrico">
         <legend>⚡ Coche eléctrico</legend>
+      </fieldset>
+      <fieldset class="panel hibrido" id="panel-hibrido">
+        <legend>🔌 Híbrido enchufable</legend>
       </fieldset>
       <fieldset class="panel gasolina" id="panel-gasolina">
         <legend>⛽ Coche de gasolina</legend>
       </fieldset>
     </form>
 
+    <div class="acciones">
+      <span class="nota">Tus datos se guardan en este navegador.</span>
+      <button type="button" id="restablecer">Restablecer valores</button>
+    </div>
+
     <section id="resultados" aria-live="polite">
-      <div class="tarjetas">
-        <div class="tarjeta electrico">
-          <span class="etiqueta">Coste total eléctrico</span>
-          <span class="valor" id="total-electrico">—</span>
-          <span class="detalle" id="km-electrico"></span>
-        </div>
-        <div class="tarjeta gasolina">
-          <span class="etiqueta">Coste total gasolina</span>
-          <span class="valor" id="total-gasolina">—</span>
-          <span class="detalle" id="km-gasolina"></span>
-        </div>
-        <div class="tarjeta resumen">
-          <span class="etiqueta" id="ahorro-etiqueta">Ahorro</span>
-          <span class="valor" id="ahorro">—</span>
-          <span class="detalle" id="amortizacion"></span>
-        </div>
-      </div>
+      <h2 id="titulo-resultados">Coste total</h2>
+      <div class="tarjetas" id="tarjetas"></div>
 
       <div class="panel">
         <h2>Gasto acumulado año a año</h2>
@@ -51,10 +44,10 @@
         <p class="nota">El gasto acumulado no descuenta el valor de reventa. El coste total de arriba sí lo descuenta.</p>
       </div>
 
-      <div class="panel">
+      <div class="panel tabla">
         <h2>Desglose</h2>
         <table id="desglose">
-          <thead><tr><th>Concepto</th><th>Eléctrico</th><th>Gasolina</th></tr></thead>
+          <thead><tr><th>Concepto</th><th>Eléctrico</th><th>Híbrido</th><th>Gasolina</th></tr></thead>
           <tbody></tbody>
           <tfoot></tfoot>
         </table>
@@ -63,10 +56,11 @@
   </main>
 
   <footer>
-    <p>Valores por defecto orientativos para España. Ajusta cada dato a tu caso: ayudas, tarifas y precios cambian a menudo.</p>
+    <p>Precios y consumos orientativos de España (octubre 2026); las ayudas son estimaciones. Ajusta cada dato a tu caso: ayudas, tarifas y precios cambian a menudo.</p>
   </footer>
 
   <script src="calc.js"></script>
+  <script src="modelos.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

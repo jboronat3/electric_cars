@@ -6,6 +6,7 @@
   --borde: #dde2e8;
   --electrico: #1a7f5a;
   --gasolina: #c2551f;
+  --hibrido: #7a4cc2;
   --acento: #2f5fd0;
   --radio: 12px;
 }
@@ -19,6 +20,7 @@
     --borde: #2c3440;
     --electrico: #3ccf95;
     --gasolina: #f08a52;
+    --hibrido: #b896ff;
     --acento: #7aa2ff;
   }
 }
@@ -48,7 +50,7 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; }
 
 .paneles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -66,6 +68,41 @@ fieldset.panel { margin: 0; }
 legend { font-weight: 600; padding: 0 6px; }
 .panel.electrico { border-top: 4px solid var(--electrico); }
 .panel.gasolina { border-top: 4px solid var(--gasolina); }
+.panel.hibrido { border-top: 4px solid var(--hibrido); }
+
+select {
+  max-width: 260px;
+  min-width: 0;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--texto);
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+}
+.campo.modelo { border-bottom: 1px solid var(--borde); padding-bottom: 12px; margin-bottom: 4px; font-weight: 600; }
+
+.acciones {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.acciones .nota { margin: 0; }
+button {
+  padding: 8px 14px;
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--acento); }
+button:focus-visible, select:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
 
 .campo {
   display: flex;
@@ -112,7 +149,8 @@ input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
 .tarjeta .detalle { font-size: 0.85rem; color: var(--texto-suave); }
 .tarjeta.electrico .valor { color: var(--electrico); }
 .tarjeta.gasolina .valor { color: var(--gasolina); }
-.tarjeta.resumen { border-color: var(--acento); }
+.tarjeta.hibrido .valor { color: var(--hibrido); }
+.tarjeta.ganador { border: 2px solid var(--acento); }
 
 #grafica svg { width: 100%; height: auto; display: block; }
 .rejilla { stroke: var(--borde); stroke-width: 1; }
@@ -120,9 +158,13 @@ input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
 .serie { fill: none; stroke-width: 3; stroke-linejoin: round; }
 .serie.electrico { stroke: var(--electrico); }
 .serie.gasolina { stroke: var(--gasolina); }
+.serie.hibrido { stroke: var(--hibrido); }
 .punto.electrico { fill: var(--electrico); }
 .punto.gasolina { fill: var(--gasolina); }
-.amortiza { stroke: var(--acento); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.punto.hibrido { fill: var(--hibrido); }
+.amortiza { stroke-width: 1.5; stroke-dasharray: 5 4; }
+.amortiza.electrico { stroke: var(--electrico); }
+.amortiza.hibrido { stroke: var(--hibrido); }
 
 .leyenda { display: flex; flex-wrap: wrap; gap: 16px; margin: 8px 0; font-size: 0.9rem; }
 .leyenda span::before {
@@ -135,16 +177,20 @@ input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
 }
 .leyenda .electrico::before { background: var(--electrico); }
 .leyenda .gasolina::before { background: var(--gasolina); }
-.leyenda .amortiza::before { background: var(--acento); }
+.leyenda .hibrido::before { background: var(--hibrido); }
+.leyenda .amortiza::before { background: repeating-linear-gradient(90deg, var(--texto-suave) 0 4px, transparent 4px 7px); }
 
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 th, td { padding: 8px; text-align: right; border-bottom: 1px solid var(--borde); }
 th:first-child, td:first-child { text-align: left; }
 tfoot td { font-weight: 700; border-bottom: none; }
+.panel.tabla { overflow-x: auto; }
 
 @media (max-width: 480px) {
   .tarjeta .valor { font-size: 1.5rem; }
   input[type="number"] { width: 84px; }
   .unidad { width: 64px; }
-  .eje { font-size: 22px; }
+  .eje { font-size: 20px; }
+  select { max-width: 200px; }
+  th, td { padding: 6px 4px; font-size: 0.85rem; }
 }

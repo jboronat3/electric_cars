@@ -1,38 +1,59 @@
-// Interfaz: genera el formulario, lee los datos y pinta los resultados.
+// Interfaz: genera el formulario, lee los datos, los guarda y pinta los resultados.
 
 (function () {
   "use strict";
 
-  // Campos del formulario: [clave, etiqueta, unidad, valor por defecto, paso]
+  const COCHES = ["electrico", "hibrido", "gasolina"];
+  const NOMBRES = { electrico: "Eléctrico", hibrido: "Híbrido enchufable", gasolina: "Gasolina" };
+  const CLAVE_GUARDADO = "comparador-coches-v2";
+
+  // Campos del formulario: [clave, etiqueta, unidad, paso]
   const CAMPOS = {
     comun: [
-      ["kmAnuales", "Kilómetros al año", "km", 15000, 500],
-      ["anios", "Años que tendrás el coche", "años", 8, 1],
-      ["subidaEnergia", "Subida anual de luz/gasolina", "%", 2, 0.5],
+      ["kmAnuales", "Kilómetros al año", "km", 500],
+      ["anios", "Años que tendrás el coche", "años", 1],
+      ["subidaEnergia", "Subida anual de luz/gasolina", "%", 0.5],
+      ["porcentajeCasa", "Carga en casa (vs electrolinera)", "%", 5],
+      ["precioKwhCasa", "Precio luz en casa", "€/kWh", 0.01],
+      ["precioKwhPublico", "Precio electrolinera", "€/kWh", 0.01],
+      ["precioLitro", "Precio gasolina", "€/L", 0.01],
     ],
     electrico: [
-      ["precio", "Precio de compra", "€", 35000, 500],
-      ["ayudas", "Ayudas y subvenciones", "€", 4500, 100],
-      ["instalacion", "Instalación del cargador", "€", 1200, 50],
-      ["consumoKwh100", "Consumo", "kWh/100 km", 16, 0.5],
-      ["porcentajeCasa", "Carga en casa", "%", 80, 5],
-      ["precioKwhCasa", "Precio luz en casa", "€/kWh", 0.15, 0.01],
-      ["precioKwhPublico", "Precio electrolinera", "€/kWh", 0.45, 0.01],
-      ["mantenimiento", "Mantenimiento anual", "€/año", 300, 25],
-      ["seguro", "Seguro anual", "€/año", 600, 25],
-      ["impuesto", "Impuesto de circulación", "€/año", 25, 5],
-      ["depreciacion", "Depreciación anual", "%", 15, 0.5],
+      ["precio", "Precio de compra", "€", 500],
+      ["ayudas", "Ayudas y descuentos", "€", 100],
+      ["instalacion", "Instalación del cargador", "€", 50],
+      ["consumoKwh100", "Consumo", "kWh/100 km", 0.5],
+      ["mantenimiento", "Mantenimiento anual", "€/año", 25],
+      ["seguro", "Seguro anual", "€/año", 25],
+      ["impuesto", "Impuesto de circulación", "€/año", 5],
+      ["depreciacion", "Depreciación anual", "%", 0.5],
+    ],
+    hibrido: [
+      ["precio", "Precio de compra", "€", 500],
+      ["ayudas", "Ayudas y descuentos", "€", 100],
+      ["instalacion", "Instalación del cargador", "€", 50],
+      ["porcentajeElectrico", "Km hechos en modo eléctrico", "%", 5],
+      ["consumoKwh100", "Consumo en eléctrico", "kWh/100 km", 0.5],
+      ["consumoL100", "Consumo en híbrido", "L/100 km", 0.1],
+      ["mantenimiento", "Mantenimiento anual", "€/año", 25],
+      ["seguro", "Seguro anual", "€/año", 25],
+      ["impuesto", "Impuesto de circulación", "€/año", 5],
+      ["depreciacion", "Depreciación anual", "%", 0.5],
     ],
     gasolina: [
-      ["precio", "Precio de compra", "€", 28000, 500],
-      ["ayudas", "Ayudas y descuentos", "€", 0, 100],
-      ["consumoL100", "Consumo", "L/100 km", 6.5, 0.1],
-      ["precioLitro", "Precio gasolina", "€/L", 1.55, 0.01],
-      ["mantenimiento", "Mantenimiento anual", "€/año", 600, 25],
-      ["seguro", "Seguro anual", "€/año", 550, 25],
-      ["impuesto", "Impuesto de circulación", "€/año", 100, 5],
-      ["depreciacion", "Depreciación anual", "%", 14, 0.5],
+      ["precio", "Precio de compra", "€", 500],
+      ["ayudas", "Ayudas y descuentos", "€", 100],
+      ["consumoL100", "Consumo", "L/100 km", 0.1],
+      ["mantenimiento", "Mantenimiento anual", "€/año", 25],
+      ["seguro", "Seguro anual", "€/año", 25],
+      ["impuesto", "Impuesto de circulación", "€/año", 5],
+      ["depreciacion", "Depreciación anual", "%", 0.5],
     ],
+  };
+
+  const VALORES_COMUNES = {
+    kmAnuales: 15000, anios: 8, subidaEnergia: 2,
+    porcentajeCasa: 80, precioKwhCasa: 0.15, precioKwhPublico: 0.45, precioLitro: 1.55,
   };
 
   const CONCEPTOS = [
@@ -54,11 +75,25 @@
   const decimal = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
 
   const form = document.getElementById("formulario");
+  const campo = (grupo, clave) => document.getElementById(grupo + "-" + clave);
+  const selector = (grupo) => document.getElementById("modelo-" + grupo);
+
+  // --- Formulario -----------------------------------------------------------
 
   function crearCampos() {
     for (const [grupo, campos] of Object.entries(CAMPOS)) {
       const panel = document.getElementById("panel-" + grupo);
-      for (const [clave, etiqueta, unidad, valor, paso] of campos) {
+
+      if (grupo !== "comun") {
+        const fila = document.createElement("label");
+        fila.className = "campo modelo";
+        fila.innerHTML = `<span>Modelo</span><select id="modelo-${grupo}">` +
+          MODELOS[grupo].map((m) => `<option value="${m.id}">${m.nombre}</option>`).join("") +
+          `<option value="personalizado">Personalizado</option></select>`;
+        panel.appendChild(fila);
+      }
+
+      for (const [clave, etiqueta, unidad, paso] of campos) {
         const id = grupo + "-" + clave;
         const fila = document.createElement("label");
         fila.className = "campo";
@@ -66,11 +101,23 @@
         fila.innerHTML =
           `<span>${etiqueta}</span>` +
           `<span class="entrada"><input type="number" id="${id}" name="${id}" ` +
-          `value="${valor}" step="${paso}" min="0" inputmode="decimal">` +
+          `data-grupo="${grupo}" step="${paso}" min="0" inputmode="decimal">` +
           `<span class="unidad">${unidad}</span></span>`;
         panel.appendChild(fila);
       }
     }
+  }
+
+  function aplicarModelo(grupo, id) {
+    const modelo = MODELOS[grupo].find((m) => m.id === id);
+    if (!modelo) return;
+    for (const [clave, valor] of Object.entries(modelo.valores)) campo(grupo, clave).value = valor;
+    selector(grupo).value = id;
+  }
+
+  function valoresPorDefecto() {
+    for (const [clave, valor] of Object.entries(VALORES_COMUNES)) campo("comun", clave).value = valor;
+    for (const grupo of COCHES) aplicarModelo(grupo, MODELOS[grupo][0].id);
   }
 
   function leerDatos() {
@@ -78,7 +125,7 @@
     for (const [grupo, campos] of Object.entries(CAMPOS)) {
       datos[grupo] = {};
       for (const [clave] of campos) {
-        const v = parseFloat(document.getElementById(grupo + "-" + clave).value);
+        const v = parseFloat(campo(grupo, clave).value);
         datos[grupo][clave] = Number.isFinite(v) ? v : 0;
       }
     }
@@ -86,46 +133,76 @@
     return datos;
   }
 
+  // --- Guardado en el navegador ----------------------------------------------
+  // localStorage puede fallar (modo privado, almacenamiento bloqueado): la app sigue funcionando.
+
+  function guardar() {
+    const valores = {};
+    form.querySelectorAll("input").forEach((i) => { valores[i.id] = i.value; });
+    const modelos = {};
+    for (const grupo of COCHES) modelos[grupo] = selector(grupo).value;
+    try { localStorage.setItem(CLAVE_GUARDADO, JSON.stringify({ valores, modelos })); } catch (e) { /* sin guardado */ }
+  }
+
+  function restaurar() {
+    let guardado;
+    try { guardado = JSON.parse(localStorage.getItem(CLAVE_GUARDADO)); } catch (e) { return false; }
+    if (!guardado || !guardado.valores) return false;
+    for (const [id, valor] of Object.entries(guardado.valores)) {
+      const input = document.getElementById(id);
+      if (input) input.value = valor;
+    }
+    for (const grupo of COCHES) {
+      const id = guardado.modelos && guardado.modelos[grupo];
+      if (id && [...selector(grupo).options].some((o) => o.value === id)) selector(grupo).value = id;
+    }
+    return true;
+  }
+
+  // --- Resultados -----------------------------------------------------------
+
+  function textoAmortizacion(a) {
+    if (a === null) return "no se amortiza en este periodo";
+    if (a.anios === 0) return "más barato desde el primer día";
+    return `se amortiza en ${decimal.format(a.anios)} años (${numero.format(a.km)} km)`;
+  }
+
   function pintarTarjetas(r, datos) {
-    document.getElementById("total-electrico").textContent = euros.format(r.electrico.total);
-    document.getElementById("total-gasolina").textContent = euros.format(r.gasolina.total);
-    document.getElementById("km-electrico").textContent = centimos.format(r.electrico.costeKm) + " por km en energía";
-    document.getElementById("km-gasolina").textContent = centimos.format(r.gasolina.costeKm) + " por km en combustible";
-
-    const ganaElectrico = r.ahorro >= 0;
-    document.getElementById("ahorro-etiqueta").textContent =
-      `Ahorras con el ${ganaElectrico ? "eléctrico" : "de gasolina"} en ${datos.comun.anios} años`;
-    document.getElementById("ahorro").textContent = euros.format(Math.abs(r.ahorro));
-
-    const a = r.amortizacion;
-    document.getElementById("amortizacion").textContent =
-      a === null
-        ? "El eléctrico no se amortiza en este periodo"
-        : a.anios === 0
-          ? "El eléctrico es más barato desde el primer día"
-          : `El eléctrico se amortiza en ${decimal.format(a.anios)} años (${numero.format(a.km)} km)`;
+    const tarjetas = COCHES.map((c) => {
+      const coche = r.coches[c];
+      const extra = c === "gasolina"
+        ? "Referencia de la comparación"
+        : `Frente a gasolina: ${r.ahorro[c] >= 0 ? "ahorras" : "pagas de más"} ${euros.format(Math.abs(r.ahorro[c]))}; ${textoAmortizacion(r.amortizacion[c])}`;
+      return `<div class="tarjeta ${c}${r.masBarato === c ? " ganador" : ""}">` +
+        `<span class="etiqueta">${NOMBRES[c]}${r.masBarato === c ? " · el más barato" : ""}</span>` +
+        `<span class="valor">${euros.format(coche.total)}</span>` +
+        `<span class="detalle">${centimos.format(coche.costeKm)} por km en energía</span>` +
+        `<span class="detalle">${extra}</span></div>`;
+    });
+    document.getElementById("tarjetas").innerHTML = tarjetas.join("");
+    document.getElementById("titulo-resultados").textContent =
+      `Coste total en ${datos.comun.anios} años (descontando la reventa)`;
   }
 
   function pintarDesglose(r) {
-    const cuerpo = document.querySelector("#desglose tbody");
-    cuerpo.innerHTML = CONCEPTOS.map(([clave, nombre]) =>
-      `<tr><td>${nombre}</td><td>${euros.format(r.electrico.desglose[clave])}</td>` +
-      `<td>${euros.format(r.gasolina.desglose[clave])}</td></tr>`).join("");
+    document.querySelector("#desglose tbody").innerHTML = CONCEPTOS.map(([clave, nombre]) =>
+      `<tr><td>${nombre}</td>` +
+      COCHES.map((c) => `<td>${euros.format(r.coches[c].desglose[clave])}</td>`).join("") +
+      "</tr>").join("");
     document.querySelector("#desglose tfoot").innerHTML =
-      `<tr><td>Coste total</td><td>${euros.format(r.electrico.total)}</td>` +
-      `<td>${euros.format(r.gasolina.total)}</td></tr>`;
+      "<tr><td>Coste total</td>" +
+      COCHES.map((c) => `<td>${euros.format(r.coches[c].total)}</td>`).join("") + "</tr>";
   }
 
   // Gráfica de líneas en SVG, sin librerías.
   function pintarGrafica(r) {
-    const e = r.electrico.acumulado;
-    const g = r.gasolina.acumulado;
+    const series = COCHES.map((c) => [c, r.coches[c].acumulado]);
     const ancho = 640, alto = 300;
-    const m = { arriba: 16, derecha: 16, abajo: 36, izquierda: 64 };
+    const m = { arriba: 16, derecha: 16, abajo: 36, izquierda: 84 };
     const anchoUtil = ancho - m.izquierda - m.derecha;
     const altoUtil = alto - m.arriba - m.abajo;
-    const n = e.length - 1;
-    const maximo = niceMax(Math.max(...e, ...g));
+    const n = series[0][1].length - 1;
+    const maximo = niceMax(Math.max(...series.flatMap(([, s]) => s)));
 
     const x = (i) => m.izquierda + (i / n) * anchoUtil;
     const y = (v) => m.arriba + altoUtil - (v / maximo) * altoUtil;
@@ -144,21 +221,26 @@
     }
     svg += `<text class="eje" x="${ancho - m.derecha}" y="${alto - 2}" text-anchor="end">años</text>`;
 
-    if (r.amortizacion && r.amortizacion.anios > 0) {
-      const xa = x(r.amortizacion.anios);
-      svg += `<line class="amortiza" x1="${xa}" x2="${xa}" y1="${m.arriba}" y2="${m.arriba + altoUtil}"/>`;
+    // Una línea discontinua del color de cada coche en su punto de amortización.
+    let leyendaAmortiza = false;
+    for (const c of ["electrico", "hibrido"]) {
+      const a = r.amortizacion[c];
+      if (a && a.anios > 0) {
+        leyendaAmortiza = true;
+        svg += `<line class="amortiza ${c}" x1="${x(a.anios)}" x2="${x(a.anios)}" y1="${m.arriba}" y2="${m.arriba + altoUtil}"/>`;
+      }
     }
 
-    svg += `<path class="serie gasolina" d="${linea(g)}"/>`;
-    svg += `<path class="serie electrico" d="${linea(e)}"/>`;
-    e.forEach((v, i) => {
-      svg += `<circle class="punto electrico" cx="${x(i)}" cy="${y(v)}" r="3"><title>Año ${i} · Eléctrico: ${euros.format(v)}</title></circle>`;
-      svg += `<circle class="punto gasolina" cx="${x(i)}" cy="${y(g[i])}" r="3"><title>Año ${i} · Gasolina: ${euros.format(g[i])}</title></circle>`;
-    });
+    for (const [c, s] of [...series].reverse()) svg += `<path class="serie ${c}" d="${linea(s)}"/>`;
+    for (const [c, s] of series) {
+      s.forEach((v, i) => {
+        svg += `<circle class="punto ${c}" cx="${x(i)}" cy="${y(v)}" r="3"><title>Año ${i} · ${NOMBRES[c]}: ${euros.format(v)}</title></circle>`;
+      });
+    }
     svg += "</svg>";
 
-    svg += `<div class="leyenda"><span class="electrico">Eléctrico</span><span class="gasolina">Gasolina</span>` +
-      (r.amortizacion && r.amortizacion.anios > 0 ? `<span class="amortiza">Amortización</span>` : "") + "</div>";
+    svg += `<div class="leyenda">` + COCHES.map((c) => `<span class="${c}">${NOMBRES[c]}</span>`).join("") +
+      (leyendaAmortiza ? `<span class="amortiza">Amortización frente a gasolina</span>` : "") + "</div>";
 
     document.getElementById("grafica").innerHTML = svg;
   }
@@ -179,10 +261,33 @@
     pintarTarjetas(r, datos);
     pintarGrafica(r);
     pintarDesglose(r);
+    guardar();
   }
 
+  // --- Arranque -------------------------------------------------------------
+
   crearCampos();
-  form.addEventListener("input", actualizar);
+  valoresPorDefecto();
+  restaurar();
+
+  form.addEventListener("input", (ev) => {
+    const grupo = ev.target.dataset.grupo;
+    // Al tocar un dato de un coche, deja de ser el modelo predefinido.
+    if (ev.target.tagName === "INPUT" && grupo && grupo !== "comun") selector(grupo).value = "personalizado";
+    actualizar();
+  });
+  form.addEventListener("change", (ev) => {
+    if (ev.target.tagName === "SELECT") {
+      aplicarModelo(ev.target.id.replace("modelo-", ""), ev.target.value);
+      actualizar();
+    }
+  });
   form.addEventListener("submit", (ev) => ev.preventDefault());
+  document.getElementById("restablecer").addEventListener("click", () => {
+    try { localStorage.removeItem(CLAVE_GUARDADO); } catch (e) { /* sin guardado */ }
+    valoresPorDefecto();
+    actualizar();
+  });
+
   actualizar();
 })();

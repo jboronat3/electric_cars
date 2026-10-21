@@ -1,14 +1,26 @@
 # Eléctrico vs Gasolina
 
-Webapp que compara el coste total de propiedad de un coche eléctrico nuevo frente a uno de gasolina nuevo.
+Webapp que compara el coste total de propiedad de un coche eléctrico, un híbrido enchufable y uno de gasolina, todos nuevos.
+
+**Pruébala:** https://jboronat3.github.io/electric_cars/ (cuando GitHub Pages esté activado)
 
 ## Qué calcula
 
 - **Coste total a N años**: compra − ayudas + cargador + energía + mantenimiento + seguro + impuesto − valor de reventa.
 - **Gráfica año a año** del gasto acumulado de cada coche.
-- **Punto de amortización**: en qué año y con cuántos km el eléctrico pasa a ser más barato.
+- **Punto de amortización** del eléctrico y del híbrido frente al de gasolina: en qué año y con cuántos km pasan a ser más baratos.
 
-Los resultados se recalculan al momento al cambiar cualquier dato.
+Los resultados se recalculan al momento, y los datos se guardan en el navegador (botón *Restablecer valores* para volver a los de fábrica).
+
+## Modelos incluidos
+
+| Tipo               | Modelo                       |
+|--------------------|------------------------------|
+| Eléctrico          | BYD Dolphin 60 kWh           |
+| Híbrido enchufable | BYD Atto 2 DM-i Boost        |
+| Gasolina           | Skoda Octavia 1.5 TSI 150 CV |
+
+Precios y consumos orientativos de España (octubre 2026); las ayudas son estimaciones. Para añadir modelos, edita `modelos.js`.
 
 ## Cómo usarla
 
@@ -16,17 +28,21 @@ Abre `index.html` en el navegador. No necesita instalar nada.
 
 ## Estructura
 
-| Archivo      | Contenido                                            |
-|--------------|------------------------------------------------------|
-| `index.html` | Estructura de la página                              |
-| `styles.css` | Estilos (modo claro y oscuro)                        |
-| `calc.js`    | Lógica de cálculo, sin dependencias del navegador    |
-| `app.js`     | Formulario, tarjetas, gráfica SVG y tabla de desglose |
+| Archivo      | Contenido                                              |
+|--------------|--------------------------------------------------------|
+| `index.html` | Estructura de la página                                |
+| `styles.css` | Estilos (modo claro y oscuro)                          |
+| `calc.js`    | Lógica de cálculo, sin dependencias del navegador      |
+| `modelos.js` | Modelos predefinidos de cada tipo de coche             |
+| `app.js`     | Formulario, guardado, tarjetas, gráfica SVG y desglose |
 
 ## Supuestos del modelo
 
-- El precio de la energía sube un % fijo cada año (configurable).
+- Los precios de la luz y la gasolina son comunes a los tres coches y suben un % fijo cada año.
+- El híbrido enchufable hace un % de sus km en eléctrico y el resto en modo híbrido con gasolina.
 - El valor de reventa se calcula con una depreciación anual constante sobre el precio de compra.
 - El gasto acumulado de la gráfica no descuenta la reventa; el coste total sí.
 
-Los valores por defecto son orientativos para España; ajústalos a tu caso.
+## Publicación
+
+Se publica con GitHub Pages desde la rama `main`, carpeta raíz (`.nojekyll` evita el procesado de Jekyll).
