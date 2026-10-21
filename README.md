@@ -45,4 +45,4 @@ Abre `index.html` en el navegador. No necesita instalar nada.
 
 ## Publicación
 
-Se publica con GitHub Pages desde la rama `main`, carpeta raíz (`.nojekyll` evita el procesado de Jekyll).
+Se publica en GitHub Pages con el workflow `.github/workflows/pages.yml` en cada push a `main` (Settings → Pages → Source: *GitHub Actions*).
