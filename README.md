@@ -47,3 +47,7 @@ Abre `index.html` en el navegador. No necesita instalar nada.
 ## Publicación
 
 Se publica en GitHub Pages con el workflow `.github/workflows/pages.yml` en cada push a `main` (Settings → Pages → Source: *GitHub Actions*).
+
+## Seguridad
+
+Ver [SECURITY.md](SECURITY.md). La web no tiene servidor ni envía datos a ningún sitio; una Content Security Policy bloquea cualquier script o conexión de terceros, y el workflow de publicación usa acciones fijadas por SHA con permisos mínimos.

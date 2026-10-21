@@ -1,0 +1,7 @@
+# Propone cada mes actualizar las acciones fijadas en los workflows.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
