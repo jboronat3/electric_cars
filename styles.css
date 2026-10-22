@@ -4,11 +4,17 @@
   --texto: #1c2430;
   --texto-suave: #5b6675;
   --borde: #dde2e8;
-  --electrico: #1a7f5a;
-  --gasolina: #c2551f;
-  --hibrido: #7a4cc2;
   --acento: #2f5fd0;
+  --si: #1a7f5a;
+  --no: #c2551f;
   --radio: 12px;
+  /* Un color por coche */
+  --c0: #1a7f5a;
+  --c1: #7a4cc2;
+  --c2: #c2551f;
+  --c3: #2f6fd0;
+  --c4: #b8326b;
+  --c5: #8a6a00;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -18,12 +24,24 @@
     --texto: #e6eaf0;
     --texto-suave: #9aa5b4;
     --borde: #2c3440;
-    --electrico: #3ccf95;
-    --gasolina: #f08a52;
-    --hibrido: #b896ff;
     --acento: #7aa2ff;
+    --si: #3ccf95;
+    --no: #f08a52;
+    --c0: #3ccf95;
+    --c1: #b896ff;
+    --c2: #f08a52;
+    --c3: #6fa8ff;
+    --c4: #f07aaa;
+    --c5: #e0c050;
   }
 }
+
+.c0 { --color: var(--c0); }
+.c1 { --color: var(--c1); }
+.c2 { --color: var(--c2); }
+.c3 { --color: var(--c3); }
+.c4 { --color: var(--c4); }
+.c5 { --color: var(--c5); }
 
 * { box-sizing: border-box; }
 
@@ -43,17 +61,20 @@ header, main, footer {
 
 header { padding-top: 32px; }
 header h1 { margin: 0 0 4px; font-size: 1.9rem; }
-header p, footer p, .nota { color: var(--texto-suave); margin: 0 0 24px; }
-footer { padding-bottom: 32px; font-size: 0.9rem; }
+header p, .nota { color: var(--texto-suave); margin: 0 0 24px; }
+footer { padding-bottom: 32px; font-size: 0.9rem; color: var(--texto-suave); }
+footer p { margin: 0 0 8px; }
 
 h2 { font-size: 1.1rem; margin: 0 0 12px; }
 
-.paneles {
+.paneles, .paneles-coches {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 16px;
-  margin-bottom: 16px;
 }
+.paneles { margin-bottom: 16px; }
+/* Los paneles de coches comparten la rejilla del formulario. */
+.paneles-coches { display: contents; }
 
 .panel {
   background: var(--superficie);
@@ -65,44 +86,8 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; }
 }
 
 fieldset.panel { margin: 0; }
-legend { font-weight: 600; padding: 0 6px; }
-.panel.electrico { border-top: 4px solid var(--electrico); }
-.panel.gasolina { border-top: 4px solid var(--gasolina); }
-.panel.hibrido { border-top: 4px solid var(--hibrido); }
-
-select {
-  max-width: 260px;
-  min-width: 0;
-  padding: 6px 8px;
-  font: inherit;
-  font-size: 0.9rem;
-  color: var(--texto);
-  background: var(--fondo);
-  border: 1px solid var(--borde);
-  border-radius: 8px;
-}
-.campo.modelo { border-bottom: 1px solid var(--borde); padding-bottom: 12px; margin-bottom: 4px; font-weight: 600; }
-
-.acciones {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-.acciones .nota { margin: 0; }
-button {
-  padding: 8px 14px;
-  font: inherit;
-  color: var(--texto);
-  background: var(--superficie);
-  border: 1px solid var(--borde);
-  border-radius: 8px;
-  cursor: pointer;
-}
-button:hover { border-color: var(--acento); }
-button:focus-visible, select:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
+legend { font-weight: 600; padding: 0 6px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel.coche { border-top: 4px solid var(--color); }
 
 .campo {
   display: flex;
@@ -112,21 +97,55 @@ button:focus-visible, select:focus { outline: 2px solid var(--acento); outline-o
   padding: 6px 0;
   font-size: 0.95rem;
 }
+.campo.selector + .campo:not(.selector) { border-top: 1px solid var(--borde); margin-top: 6px; padding-top: 12px; }
 
 .entrada { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .unidad { color: var(--texto-suave); font-size: 0.8rem; width: 72px; }
 
-input[type="number"] {
-  width: 96px;
+input, select, button { font: inherit; color: var(--texto); }
+
+input[type="number"], input[type="text"], select {
   padding: 6px 8px;
-  font: inherit;
-  text-align: right;
-  color: var(--texto);
   background: var(--fondo);
   border: 1px solid var(--borde);
   border-radius: 8px;
 }
-input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
+input[type="number"] { width: 96px; text-align: right; }
+input[type="text"] { width: 180px; }
+select { max-width: 260px; min-width: 0; font-size: 0.9rem; }
+input:focus, select:focus, button:focus-visible { outline: 2px solid var(--acento); outline-offset: 1px; }
+
+button {
+  padding: 8px 14px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--acento); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.principal { background: var(--acento); border-color: var(--acento); color: #fff; font-weight: 600; }
+button.quitar { margin-top: 12px; font-size: 0.85rem; color: var(--texto-suave); }
+
+.acciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 24px;
+}
+.acciones .nota { margin: 0; flex: 1; }
+
+.cabecera-resultados {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+.cabecera-resultados h2 { margin: 0; }
+.cabecera-resultados label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--texto-suave); }
 
 .tarjetas {
   display: grid;
@@ -138,19 +157,17 @@ input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
 .tarjeta {
   background: var(--superficie);
   border: 1px solid var(--borde);
+  border-top: 4px solid var(--color);
   border-radius: var(--radio);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.tarjeta .etiqueta { color: var(--texto-suave); font-size: 0.9rem; }
-.tarjeta .valor { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tarjeta .etiqueta { font-weight: 600; font-size: 0.95rem; overflow-wrap: anywhere; }
+.tarjeta .valor { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color); }
 .tarjeta .detalle { font-size: 0.85rem; color: var(--texto-suave); }
-.tarjeta.electrico .valor { color: var(--electrico); }
-.tarjeta.gasolina .valor { color: var(--gasolina); }
-.tarjeta.hibrido .valor { color: var(--hibrido); }
-.tarjeta.ganador { border: 2px solid var(--acento); }
+.tarjeta.ganador { outline: 2px solid var(--acento); outline-offset: -1px; }
 
 #compensa .controles {
   display: flex;
@@ -177,24 +194,17 @@ input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
   font-weight: 600;
   border-left: 4px solid;
 }
-.veredicto.si { border-color: var(--electrico); background: color-mix(in srgb, var(--electrico) 12%, transparent); }
-.veredicto.no { border-color: var(--gasolina); background: color-mix(in srgb, var(--gasolina) 12%, transparent); }
+.veredicto.si { border-color: var(--si); background: color-mix(in srgb, var(--si) 12%, transparent); }
+.veredicto.no { border-color: var(--no); background: color-mix(in srgb, var(--no) 12%, transparent); }
 
 #grafica svg { width: 100%; height: auto; display: block; }
 .rejilla { stroke: var(--borde); stroke-width: 1; }
 .eje { fill: var(--texto-suave); font-size: 12px; }
-.serie { fill: none; stroke-width: 3; stroke-linejoin: round; }
-.serie.electrico { stroke: var(--electrico); }
-.serie.gasolina { stroke: var(--gasolina); }
-.serie.hibrido { stroke: var(--hibrido); }
-.punto.electrico { fill: var(--electrico); }
-.punto.gasolina { fill: var(--gasolina); }
-.punto.hibrido { fill: var(--hibrido); }
-.amortiza { stroke-width: 1.5; stroke-dasharray: 5 4; }
-.amortiza.electrico { stroke: var(--electrico); }
-.amortiza.hibrido { stroke: var(--hibrido); }
+.serie { fill: none; stroke: var(--color); stroke-width: 3; stroke-linejoin: round; }
+.punto { fill: var(--color); }
+.amortiza { stroke: var(--color); stroke-width: 1.5; stroke-dasharray: 5 4; }
 
-.leyenda { display: flex; flex-wrap: wrap; gap: 16px; margin: 8px 0; font-size: 0.9rem; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 8px 0; font-size: 0.9rem; }
 .leyenda span::before {
   content: "";
   display: inline-block;
@@ -202,21 +212,21 @@ input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
   margin-right: 6px;
   vertical-align: middle;
   border-radius: 2px;
+  background: var(--color);
 }
-.leyenda .electrico::before { background: var(--electrico); }
-.leyenda .gasolina::before { background: var(--gasolina); }
-.leyenda .hibrido::before { background: var(--hibrido); }
 .leyenda .amortiza::before { background: repeating-linear-gradient(90deg, var(--texto-suave) 0 4px, transparent 4px 7px); }
 
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 th, td { padding: 8px; text-align: right; border-bottom: 1px solid var(--borde); }
 th:first-child, td:first-child { text-align: left; }
+thead th:not(:first-child) { border-bottom: 3px solid var(--color); }
 tfoot td { font-weight: 700; border-bottom: none; }
 .panel.tabla { overflow-x: auto; }
 
 @media (max-width: 480px) {
   .tarjeta .valor { font-size: 1.5rem; }
   input[type="number"] { width: 84px; }
+  input[type="text"] { width: 150px; }
   .unidad { width: 64px; }
   .eje { font-size: 20px; }
   select { max-width: 200px; }

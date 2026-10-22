@@ -7,13 +7,13 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Eléctrico vs Gasolina</title>
-  <meta name="description" content="Compara el coste total de un coche eléctrico, un híbrido enchufable y uno de gasolina nuevos.">
+  <meta name="description" content="Compara el coste total de coches eléctricos, híbridos enchufables y de gasolina, nuevos o de segunda mano.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header>
     <h1>Eléctrico vs Gasolina</h1>
-    <p>Compara cuánto te costará de verdad cada coche: compra, energía, mantenimiento, seguro e impuestos.</p>
+    <p>Compara cuánto te costará de verdad cada coche, nuevo o de segunda mano: compra, energía, mantenimiento, seguro e impuestos.</p>
   </header>
 
   <main>
@@ -21,36 +21,26 @@
       <fieldset class="panel" id="panel-comun">
         <legend>Tu uso y precios de la energía</legend>
       </fieldset>
-      <fieldset class="panel electrico" id="panel-electrico">
-        <legend>⚡ Coche eléctrico</legend>
-      </fieldset>
-      <fieldset class="panel hibrido" id="panel-hibrido">
-        <legend>🔌 Híbrido enchufable</legend>
-      </fieldset>
-      <fieldset class="panel gasolina" id="panel-gasolina">
-        <legend>⛽ Coche de gasolina</legend>
-      </fieldset>
+      <div id="paneles-coches" class="paneles-coches"></div>
     </form>
 
     <div class="acciones">
-      <span class="nota">Tus datos se guardan en este navegador.</span>
+      <button type="button" id="anadir" class="principal">+ Añadir coche</button>
+      <span class="nota">Hasta 6 coches. Tus datos se guardan en este navegador.</span>
       <button type="button" id="restablecer">Restablecer valores</button>
     </div>
 
     <section id="resultados" aria-live="polite">
-      <h2 id="titulo-resultados">Coste total</h2>
+      <div class="cabecera-resultados">
+        <h2 id="titulo-resultados">Coste total</h2>
+        <label>Comparar frente a <select id="referencia"></select></label>
+      </div>
       <div class="tarjetas" id="tarjetas"></div>
 
       <div class="panel" id="compensa">
         <h2>¿Cuándo compensa?</h2>
         <div class="controles">
-          <label>Comparar
-            <select id="compensa-coche">
-              <option value="electrico">el eléctrico</option>
-              <option value="hibrido">el híbrido enchufable</option>
-            </select>
-            frente al de gasolina
-          </label>
+          <label>Comparar <select id="compensa-coche"></select> frente a <strong id="compensa-ref"></strong></label>
           <label>Quiero amortizarlo en
             <input type="number" id="compensa-objetivo" value="7" min="1" max="30" step="1" inputmode="numeric">
             años
@@ -58,7 +48,7 @@
         </div>
         <div class="cifras">
           <div><span class="etiqueta">Pagas de más al comprar</span><span class="valor" id="c-sobrecoste"></span><span class="detalle">precio − ayudas + cargador</span></div>
-          <div><span class="etiqueta">Ahorras cada año</span><span class="valor" id="c-ahorro"></span><span class="detalle" id="c-ahorro-detalle"></span></div>
+          <div><span class="etiqueta">Ahorras el primer año</span><span class="valor" id="c-ahorro"></span><span class="detalle" id="c-ahorro-detalle"></span></div>
           <div><span class="etiqueta">Se amortiza en</span><span class="valor" id="c-anios"></span><span class="detalle" id="c-anios-detalle"></span></div>
           <div><span class="etiqueta">Se amortiza a los</span><span class="valor" id="c-km"></span><span class="detalle" id="c-km-detalle"></span></div>
         </div>
@@ -75,7 +65,7 @@
       <div class="panel tabla">
         <h2>Desglose</h2>
         <table id="desglose">
-          <thead><tr><th>Concepto</th><th>Eléctrico</th><th>Híbrido</th><th>Gasolina</th></tr></thead>
+          <thead></thead>
           <tbody></tbody>
           <tfoot></tfoot>
         </table>
@@ -84,7 +74,8 @@
   </main>
 
   <footer>
-    <p>Precios y consumos orientativos de España (octubre 2026); las ayudas son estimaciones. Ajusta cada dato a tu caso: ayudas, tarifas y precios cambian a menudo.</p>
+    <p>Precios y consumos orientativos de España (octubre 2026); las ayudas y los precios de segunda mano son estimaciones. Ajusta cada dato a tu caso.</p>
+    <p>En los coches usados, el mantenimiento sube con los km y la depreciación anual baja con la edad del coche.</p>
   </footer>
 
   <script src="calc.js"></script>
