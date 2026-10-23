@@ -100,6 +100,17 @@ legend { font-weight: 600; padding: 0 6px; max-width: 100%; overflow: hidden; te
 .campo.selector + .campo:not(.selector) { border-top: 1px solid var(--borde); margin-top: 6px; padding-top: 12px; }
 
 .entrada { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.campo[hidden] { display: none; }
+.campo.casilla { justify-content: flex-start; flex-direction: row-reverse; gap: 10px; }
+.campo.casilla input { width: 18px; height: 18px; }
+.resumen-cargador {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--fondo);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
 .unidad { color: var(--texto-suave); font-size: 0.8rem; width: 72px; }
 
 input, select, button { font: inherit; color: var(--texto); }
@@ -167,6 +178,7 @@ button.quitar { margin-top: 12px; font-size: 0.85rem; color: var(--texto-suave);
 .tarjeta .etiqueta { font-weight: 600; font-size: 0.95rem; overflow-wrap: anywhere; }
 .tarjeta .valor { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color); }
 .tarjeta .detalle { font-size: 0.85rem; color: var(--texto-suave); }
+.tarjeta .mensual { font-size: 0.95rem; font-weight: 600; }
 .tarjeta.ganador { outline: 2px solid var(--acento); outline-offset: -1px; }
 
 #compensa .controles {

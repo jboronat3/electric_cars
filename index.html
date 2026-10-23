@@ -19,13 +19,17 @@
   <main>
     <form id="formulario" class="paneles" autocomplete="off">
       <fieldset class="panel" id="panel-comun">
-        <legend>Tu uso y precios de la energía</legend>
+        <legend>Tu uso, precios de la energía y compra</legend>
+      </fieldset>
+      <fieldset class="panel" id="panel-cargador">
+        <legend>🔌 Cargador en tu garaje</legend>
       </fieldset>
       <div id="paneles-coches" class="paneles-coches"></div>
     </form>
 
     <div class="acciones">
       <button type="button" id="anadir" class="principal">+ Añadir coche</button>
+      <button type="button" id="mi-caso">Mi caso: usados de ~15.000 €</button>
       <span class="nota">Hasta 6 coches. Tus datos se guardan en este navegador.</span>
       <button type="button" id="restablecer">Restablecer valores</button>
     </div>
@@ -47,7 +51,7 @@
           </label>
         </div>
         <div class="cifras">
-          <div><span class="etiqueta">Pagas de más al comprar</span><span class="valor" id="c-sobrecoste"></span><span class="detalle">precio − ayudas + cargador</span></div>
+          <div><span class="etiqueta">Pagas de más al comprar</span><span class="valor" id="c-sobrecoste"></span><span class="detalle">precio − ayudas + gastos de compra + cargador</span></div>
           <div><span class="etiqueta">Ahorras el primer año</span><span class="valor" id="c-ahorro"></span><span class="detalle" id="c-ahorro-detalle"></span></div>
           <div><span class="etiqueta">Se amortiza en</span><span class="valor" id="c-anios"></span><span class="detalle" id="c-anios-detalle"></span></div>
           <div><span class="etiqueta">Se amortiza a los</span><span class="valor" id="c-km"></span><span class="detalle" id="c-km-detalle"></span></div>
@@ -75,7 +79,8 @@
 
   <footer>
     <p>Precios y consumos orientativos de España (octubre 2026); las ayudas y los precios de segunda mano son estimaciones. Ajusta cada dato a tu caso.</p>
-    <p>En los coches usados, el mantenimiento sube con los km y la depreciación anual baja con la edad del coche.</p>
+    <p>En los coches usados, el mantenimiento sube con los km y la depreciación anual baja con la edad del coche. El ITP se calcula sobre el precio; Hacienda lo calcula sobre el mayor entre el precio y el valor fiscal del coche.</p>
+    <p>El coste del cargador es orientativo: pide dos o tres presupuestos desglosados (cable, protecciones, obra y legalización), y pregunta al administrador si el garaje ya tiene un gestor de carga.</p>
   </footer>
 
   <script src="calc.js"></script>

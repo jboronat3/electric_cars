@@ -6,12 +6,18 @@ Webapp que compara el coste total de propiedad de coches eléctricos, híbridos 
 
 ## Qué calcula
 
-- **Coste total a N años**: compra − ayudas + cargador + energía + mantenimiento + seguro + impuesto − valor de reventa.
+- **Coste total a N años**: compra − ayudas + gastos de compra + cargador + energía + mantenimiento + seguro + impuesto − valor de reventa, y su media al mes.
 - **Gráfica año a año** del gasto acumulado de cada coche.
 - **Punto de amortización** de cada coche frente al de referencia: en qué año y con cuántos km pasan a ser más baratos.
 - **¿Cuándo compensa?**: sobrecoste inicial ÷ ahorro anual, y el cálculo inverso: cuántos km al año necesitas para amortizar un coche frente a otro en los años que elijas.
 
 Puedes comparar de 2 a 6 coches: con *+ Añadir coche* eliges tipo, estado (nuevo o segunda mano) y modelo. En los usados indicas el año de matriculación y los km, y la app propone un precio estimado que puedes cambiar por el del anuncio. Todo se compara frente al coche de referencia que elijas.
+
+**Cargador en tu garaje:** calcula la instalación según la distancia al contador, la potencia y la deducción del 15 % en el IRPF, o la cuota si el garaje tiene un gestor de carga. Se suma a cada coche eléctrico o híbrido enchufable.
+
+**Gastos de compra:** al comprar un usado a un particular se suman el ITP de tu comunidad, la tasa de la DGT (55,70 €) y la gestoría.
+
+**Mi caso:** el botón carga una comparación de usados de unos 15.000 € en Cataluña (12.000 km/año, 10 años, cargador a 100 m del contador).
 
 Los resultados se recalculan al momento, y los datos se guardan en el navegador (botón *Restablecer valores* para volver a los de fábrica).
 
@@ -19,9 +25,9 @@ Los resultados se recalculan al momento, y los datos se guardan en el navegador 
 
 | Tipo               | Modelo                       |
 |--------------------|------------------------------|
-| Eléctrico          | BYD Dolphin 60 kWh           |
-| Híbrido enchufable | BYD Atto 2 DM-i Boost        |
-| Gasolina           | Skoda Octavia 1.5 TSI 150 CV |
+| Eléctrico          | BYD Dolphin 60 kWh, MG4 51 kWh, Kia e-Niro 64 kWh |
+| Híbrido enchufable | BYD Atto 2 DM-i Boost, Kia Niro PHEV 1.6 GDi |
+| Gasolina           | Skoda Octavia 1.5 TSI 150 CV, Skoda Octavia Combi 1.5 TSI 150 CV |
 
 Precios y consumos orientativos de España (octubre 2026); las ayudas son estimaciones. Los modelos sirven de plantilla para coches nuevos y usados; para añadir más, edita `modelos.js`.
 
@@ -46,6 +52,8 @@ Abre `index.html` en el navegador. No necesita instalar nada.
 - El mantenimiento sube con los km del coche: +3 % por cada 10.000 km, como mucho el doble.
 - La depreciación anual baja con la edad del coche (un 10 % menos de la tasa por año, hasta el 40 % de la de un coche nuevo). El valor de reventa sale del precio de compra.
 - El precio estimado de un usado es el de nuevo menos lo que se ha depreciado desde su año de matriculación.
+- El ITP se calcula sobre el precio de compra; Hacienda lo aplica sobre el mayor entre el precio y el valor fiscal.
+- El cargador se cuenta en cada coche enchufable, porque solo comprarás uno de ellos.
 - El gasto acumulado de la gráfica no descuenta la reventa; el coste total sí.
 
 ## Publicación

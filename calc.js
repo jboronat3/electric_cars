@@ -8,6 +8,10 @@
   const HORIZONTE_MAX = 30;
   // Máximo de km al año al buscar cuántos hacen falta para amortizar.
   const KM_MAX_BUSQUEDA = 200000;
+  // Tasa de la DGT por cambio de titularidad (2026).
+  const TASA_DGT = 55.7;
+  // Deducción del IRPF por instalar un punto de recarga: 15 % sobre un máximo de 4.000 €.
+  const DEDUCCION_CARGADOR = { porcentaje: 15, baseMaxima: 4000 };
 
   // Precio medio del kWh mezclando carga en casa y en electrolinera.
   function precioKwhMedio(comun) {
@@ -57,13 +61,50 @@
     };
   }
 
+  const esEnchufable = (coche) => coche.tipo === "electrico" || coche.tipo === "hibrido";
+
+  // Coste del cargador del garaje: lo que se paga una vez y el gasto fijo anual.
+  //   modo "propia": línea desde tu contador (equipo + cable por metro + protecciones y legalización)
+  //   modo "gestor": empresa que gestiona la recarga del garaje (alta + cuota mensual)
+  //   modo "ninguno": ya tienes cargador o no vas a instalarlo
+  function costeCargador(c) {
+    let bruto = 0;
+    let anual = 0;
+    if (c.modo === "propia") {
+      bruto = c.equipo + c.distancia * c.precioMetro + c.extras;
+      anual = c.potenciaExtra * c.precioPotencia;
+    } else if (c.modo === "gestor") {
+      bruto = c.alta;
+      anual = c.cuotaMensual * 12;
+    }
+    const deduccion = c.deduccion
+      ? (Math.min(bruto, DEDUCCION_CARGADOR.baseMaxima) * DEDUCCION_CARGADOR.porcentaje) / 100
+      : 0;
+    return { bruto, deduccion, instalacion: bruto - deduccion, anual };
+  }
+
+  // Gastos de comprar un usado a un particular: ITP sobre el precio + tasa DGT + gestoría.
+  // (El ITP se calcula en realidad sobre el mayor entre el precio y el valor fiscal de Hacienda.)
+  function gastosCompra(coche, comun) {
+    if (coche.estado !== "usado" || coche.vendedor !== "particular") return 0;
+    return (coche.precio * (comun.itp ?? 0)) / 100 + TASA_DGT + (comun.gestoria ?? 0);
+  }
+
+  // Lo que se paga al empezar: precio − ayudas + gastos de compra + cargador (si es enchufable).
+  function costeInicial(coche, comun) {
+    const cargador = esEnchufable(coche) && comun.cargador ? comun.cargador.instalacion : 0;
+    return coche.precio - coche.ayudas + gastosCompra(coche, comun) + cargador;
+  }
+
   // Desglose y gasto acumulado año a año de un coche.
   function calcularCoche(coche, comun) {
     const km = costeKm(coche, comun);
     const inicio = estadoInicial(coche, comun);
-    const instalacion = coche.instalacion ?? 0;
-    const inicial = coche.precio - coche.ayudas + instalacion;
-    const acumulado = [inicial];
+    const enchufable = esEnchufable(coche) && comun.cargador;
+    const instalacion = enchufable ? comun.cargador.instalacion : 0;
+    const cuotaCargador = enchufable ? comun.cargador.anual : 0;
+    const gastos = gastosCompra(coche, comun);
+    const acumulado = [costeInicial(coche, comun)];
     let energiaTotal = 0;
     let mantenimientoTotal = 0;
 
@@ -74,7 +115,7 @@
       const mantenimiento = coche.mantenimiento * factorMantenimiento(kmMedios);
       energiaTotal += energia;
       mantenimientoTotal += mantenimiento;
-      acumulado.push(acumulado[anio - 1] + energia + mantenimiento + coche.seguro + coche.impuesto);
+      acumulado.push(acumulado[anio - 1] + energia + mantenimiento + coche.seguro + coche.impuesto + cuotaCargador);
     }
 
     const valorResidual = valorTrasAnios(coche.precio, coche.depreciacion, inicio.edad, comun.anios);
@@ -85,8 +126,10 @@
       desglose: {
         compra: coche.precio,
         ayudas: -coche.ayudas,
+        gastosCompra: gastos,
         instalacion,
         energia: energiaTotal,
+        cuotaCargador: cuotaCargador * comun.anios,
         mantenimiento: mantenimientoTotal,
         seguro: coche.seguro * comun.anios,
         impuesto: coche.impuesto * comun.anios,
@@ -118,13 +161,11 @@
     const { comun } = datos;
     const a = datos.coches.find((c) => c.id === idA);
     const b = datos.coches.find((c) => c.id === idRef);
-    const inicial = (c) => c.precio - c.ayudas + (c.instalacion ?? 0);
-
     const largo = { ...comun, anios: Math.max(comun.anios, HORIZONTE_MAX) };
     const ra = calcularCoche(a, largo);
     const rb = calcularCoche(b, largo);
 
-    const sobrecoste = inicial(a) - inicial(b);
+    const sobrecoste = costeInicial(a, comun) - costeInicial(b, comun);
     const ahorroAnual = (rb.acumulado[1] - rb.acumulado[0]) - (ra.acumulado[1] - ra.acumulado[0]);
     const ahorroEnergia = (costeKm(b, comun) - costeKm(a, comun)) * comun.kmAnuales;
 
@@ -188,7 +229,7 @@
   }
 
   const api = {
-    comparar, compensa, costeKm, precioKwhMedio, puntoAmortizacion,
+    comparar, compensa, costeKm, precioKwhMedio, puntoAmortizacion, costeCargador, gastosCompra, TASA_DGT,
     factorMantenimiento, tasaDepreciacion, valorTrasAnios, HORIZONTE_MAX, KM_MAX_BUSQUEDA,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;

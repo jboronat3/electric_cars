@@ -3,7 +3,7 @@
 (function () {
   "use strict";
 
-  const CLAVE_GUARDADO = "comparador-coches-v3";
+  const CLAVE_GUARDADO = "comparador-coches-v4";
   const MAX_COCHES = 6;
   const MIN_COCHES = 2;
   const COLORES = 6;
@@ -15,6 +15,7 @@
     gasolina: { nombre: "Gasolina", icono: "⛽" },
   };
   const ESTADOS = { nuevo: "Nuevo", usado: "Segunda mano" };
+  const VENDEDORES = { particular: "Particular (pagas ITP)", concesionario: "Concesionario" };
 
   // Campos del formulario: [clave, etiqueta, unidad, paso]
   const CAMPOS_COMUN = [
@@ -25,6 +26,8 @@
     ["precioKwhCasa", "Precio luz en casa", "€/kWh", 0.01],
     ["precioKwhPublico", "Precio electrolinera", "€/kWh", 0.01],
     ["precioLitro", "Precio gasolina", "€/L", 0.01],
+    ["itp", "ITP de tu comunidad (usado a particular)", "%", 0.5],
+    ["gestoria", "Gestoría para la transferencia", "€", 10],
   ];
 
   const CAMPOS_USADO = [
@@ -34,7 +37,6 @@
 
   const PRECIO = ["precio", "Precio de compra", "€", 500];
   const AYUDAS = ["ayudas", "Ayudas y descuentos", "€", 100];
-  const INSTALACION = ["instalacion", "Instalación del cargador", "€", 50];
   const GASTOS = [
     ["mantenimiento", "Mantenimiento anual (a 0 km)", "€/año", 25],
     ["seguro", "Seguro anual", "€/año", 25],
@@ -42,9 +44,9 @@
     ["depreciacion", "Depreciación anual (de nuevo)", "%", 0.5],
   ];
   const CAMPOS = {
-    electrico: [PRECIO, AYUDAS, INSTALACION,
+    electrico: [PRECIO, AYUDAS,
       ["consumoKwh100", "Consumo", "kWh/100 km", 0.5], ...GASTOS],
-    hibrido: [PRECIO, AYUDAS, INSTALACION,
+    hibrido: [PRECIO, AYUDAS,
       ["porcentajeElectrico", "Km hechos en modo eléctrico", "%", 5],
       ["consumoKwh100", "Consumo en eléctrico", "kWh/100 km", 0.5],
       ["consumoL100", "Consumo en híbrido", "L/100 km", 0.1], ...GASTOS],
@@ -55,13 +57,43 @@
   const VALORES_COMUNES = {
     kmAnuales: 15000, anios: 8, subidaEnergia: 2,
     porcentajeCasa: 80, precioKwhCasa: 0.15, precioKwhPublico: 0.45, precioLitro: 1.55,
+    itp: 5, gestoria: 0,
+  };
+
+  // Cargador del garaje, común a todos los coches enchufables.
+  const MODOS_CARGADOR = {
+    propia: "Línea propia desde mi contador",
+    gestor: "Gestor de carga del garaje (cuota)",
+    ninguno: "Sin instalación (ya tengo o cargo fuera)",
+  };
+  const POTENCIAS = { "3.7": "3,7 kW (cable más fino)", "7.4": "7,4 kW" };
+  // Precio orientativo por metro de cable, canalización y montaje según la potencia:
+  // a más potencia y distancia, más sección de cable.
+  const PRECIO_METRO = { "3.7": 12, "7.4": 18 };
+  // [clave, etiqueta, unidad, paso, modos en los que se muestra]
+  const CAMPOS_CARGADOR = [
+    ["distancia", "Distancia de tu plaza al contador", "m", 5, ["propia"]],
+    ["precioMetro", "Cable, canalización y montaje", "€/m", 1, ["propia"]],
+    ["equipo", "Cargador (equipo)", "€", 50, ["propia"]],
+    ["extras", "Protecciones, contador y legalización", "€", 50, ["propia"]],
+    ["potenciaExtra", "Subir potencia contratada", "kW", 0.1, ["propia"]],
+    ["precioPotencia", "Precio de la potencia", "€/kW·año", 1, ["propia"]],
+    ["alta", "Alta en el servicio", "€", 50, ["gestor"]],
+    ["cuotaMensual", "Cuota mensual", "€/mes", 1, ["gestor"]],
+  ];
+  const CARGADOR_DEFECTO = {
+    modo: "propia", potencia: "7.4", distancia: 20, precioMetro: PRECIO_METRO["7.4"],
+    equipo: 700, extras: 400, potenciaExtra: 1, precioPotencia: 35,
+    alta: 0, cuotaMensual: 25, deduccion: true,
   };
 
   const CONCEPTOS = [
     ["compra", "Precio de compra"],
     ["ayudas", "Ayudas"],
-    ["instalacion", "Instalación cargador"],
+    ["gastosCompra", "Gastos de compra (ITP, DGT)"],
+    ["instalacion", "Cargador (instalación)"],
     ["energia", "Energía / combustible"],
+    ["cuotaCargador", "Cargador (cuota / potencia)"],
     ["mantenimiento", "Mantenimiento"],
     ["seguro", "Seguro"],
     ["impuesto", "Impuesto circulación"],
@@ -87,7 +119,7 @@
   const compensaCoche = document.getElementById("compensa-coche");
   const compensaObjetivo = document.getElementById("compensa-objetivo");
 
-  // Estado de la app: { comun, coches, referencia, compensa: { coche, objetivo }, siguienteId }
+  // Estado de la app: { comun, cargador, coches, referencia, compensa: { coche, objetivo }, siguienteId }
   let estado;
 
   // --- Coches ---------------------------------------------------------------
@@ -114,21 +146,23 @@
     return coche.estado === "usado" ? `${modelo.nombre} (${coche.anioMatriculacion})` : modelo.nombre;
   }
 
-  function aplicarModelo(coche, idModelo) {
+  // `conUsoTipico`: en un usado, toma también el año y los km típicos del modelo.
+  function aplicarModelo(coche, idModelo, conUsoTipico) {
     const modelo = buscarModelo(coche.tipo, idModelo);
     if (!modelo) { coche.modelo = "personalizado"; return; }
     Object.assign(coche, modelo.valores);
     coche.modelo = modelo.id;
     if (coche.estado === "usado") {
+      if (conUsoTipico && modelo.usado) Object.assign(coche, modelo.usado);
       coche.precio = precioUsadoEstimado(modelo.valores, coche.anioMatriculacion);
       coche.ayudas = 0;
     }
     if (!coche.nombrePropio) coche.nombre = nombreAuto(coche);
   }
 
-  // Crea un coche de `tipo` con los datos del primer modelo. `base` conserva
-  // id, color, nombre propio, año y km al cambiar de tipo.
-  function nuevoCoche(tipo, estadoCoche, base = {}) {
+  // Crea un coche de `tipo` con los datos del modelo `idModelo` (o del primero). `base`
+  // conserva id, color, nombre propio, año, km y vendedor al cambiar de tipo.
+  function nuevoCoche(tipo, estadoCoche, base = {}, idModelo = MODELOS[tipo][0].id) {
     const coche = {
       id: base.id || "c" + estado.siguienteId++,
       color: base.color ?? colorLibre(),
@@ -139,9 +173,10 @@
       modelo: "personalizado",
       anioMatriculacion: base.anioMatriculacion ?? ANIO_ACTUAL - 4,
       kmActuales: base.kmActuales ?? 60000,
+      vendedor: base.vendedor ?? "particular",
     };
     for (const [clave] of CAMPOS[tipo]) coche[clave] = 0;
-    aplicarModelo(coche, MODELOS[tipo][0].id);
+    aplicarModelo(coche, idModelo, base.anioMatriculacion === undefined);
     return coche;
   }
 
@@ -155,8 +190,13 @@
     return (gasolina || estado.coches[0]).id;
   }
 
+  const estadoVacio = () => ({
+    comun: { ...VALORES_COMUNES }, cargador: { ...CARGADOR_DEFECTO },
+    coches: [], referencia: null, compensa: { coche: null, objetivo: 7 }, siguienteId: 1,
+  });
+
   function estadoPorDefecto() {
-    estado = { comun: { ...VALORES_COMUNES }, coches: [], referencia: null, compensa: { coche: null, objetivo: 7 }, siguienteId: 1 };
+    estado = estadoVacio();
     for (const [tipo, est, base] of [
       ["electrico", "nuevo"],
       ["hibrido", "nuevo"],
@@ -165,6 +205,22 @@
     ]) estado.coches.push(nuevoCoche(tipo, est, base));
     estado.referencia = primerGasolina();
     estado.compensa.coche = estado.coches[0].id;
+  }
+
+  // Tu caso: usados de unos 15.000 € en Cataluña, 12.000 km al año durante 10 años,
+  // y un cargador de 3,7 kW a 100 m del contador en un garaje comunitario.
+  function estadoMiCaso() {
+    estado = estadoVacio();
+    Object.assign(estado.comun, { kmAnuales: 12000, anios: 10, porcentajeCasa: 90, itp: 5 });
+    Object.assign(estado.cargador, { modo: "propia", potencia: "3.7", distancia: 100, precioMetro: PRECIO_METRO["3.7"], equipo: 600 });
+    for (const [tipo, idModelo] of [
+      ["gasolina", "skoda-octavia-combi"],
+      ["electrico", "mg4-51"],
+      ["electrico", "kia-e-niro-64"],
+      ["hibrido", "kia-niro-phev"],
+    ]) estado.coches.push(nuevoCoche(tipo, "usado", {}, idModelo));
+    estado.referencia = estado.coches[0].id;
+    estado.compensa = { coche: estado.coches[1].id, objetivo: 10 };
   }
 
   // --- Guardado en el navegador ----------------------------------------------
@@ -182,16 +238,22 @@
     if (!g.coches.every((c) => c && TIPOS[c.tipo])) return false;
 
     const num = (v, defecto) => (Number.isFinite(Number(v)) && v !== null && v !== "" ? Number(v) : defecto);
-    estado = { comun: {}, coches: [], referencia: null, compensa: { coche: null, objetivo: 7 }, siguienteId: 1 };
+    estado = estadoVacio();
     for (const clave of Object.keys(VALORES_COMUNES)) {
       estado.comun[clave] = num(g.comun && g.comun[clave], VALORES_COMUNES[clave]);
     }
+    const gcar = g.cargador || {};
+    if (MODOS_CARGADOR[gcar.modo]) estado.cargador.modo = gcar.modo;
+    if (POTENCIAS[gcar.potencia]) estado.cargador.potencia = gcar.potencia;
+    for (const [clave] of CAMPOS_CARGADOR) estado.cargador[clave] = num(gcar[clave], CARGADOR_DEFECTO[clave]);
+    if (typeof gcar.deduccion === "boolean") estado.cargador.deduccion = gcar.deduccion;
 
     const ids = {};
     for (const gc of g.coches) {
       const coche = nuevoCoche(gc.tipo, gc.estado === "usado" ? "usado" : "nuevo");
       for (const [clave] of [...CAMPOS[gc.tipo], ...CAMPOS_USADO]) coche[clave] = num(gc[clave], coche[clave]);
       coche.modelo = buscarModelo(gc.tipo, gc.modelo) ? gc.modelo : "personalizado";
+      if (VENDEDORES[gc.vendedor]) coche.vendedor = gc.vendedor;
       coche.nombrePropio = !!gc.nombrePropio;
       if (typeof gc.nombre === "string") coche.nombre = gc.nombre.slice(0, 60);
       const color = Number(gc.color);
@@ -256,6 +318,67 @@
     for (const [clave] of CAMPOS_COMUN) document.getElementById("comun-" + clave).value = estado.comun[clave];
   }
 
+  // --- Cargador del garaje ---------------------------------------------------
+
+  const panelCargador = document.getElementById("panel-cargador");
+
+  function crearPanelCargador() {
+    const selects = [
+      ["modo", "Tipo de instalación", Object.entries(MODOS_CARGADOR), ["propia", "gestor", "ninguno"]],
+      ["potencia", "Potencia del cargador", Object.entries(POTENCIAS), ["propia"]],
+    ];
+    for (const [clave, etiqueta, opciones, modos] of selects) {
+      const select = desplegable("cargador-" + clave, opciones, estado.cargador[clave]);
+      select.dataset.cargador = clave;
+      const fila = filaCampo(select.id, etiqueta, select);
+      fila.dataset.modos = modos.join(" ");
+      panelCargador.append(fila);
+    }
+    for (const [clave, etiqueta, unidad, paso, modos] of CAMPOS_CARGADOR) {
+      const input = entradaNumero("cargador-" + clave, estado.cargador[clave], paso);
+      input.dataset.cargador = clave;
+      const fila = filaCampo(input.id, etiqueta, input, unidad);
+      fila.dataset.modos = modos.join(" ");
+      panelCargador.append(fila);
+    }
+    const deduccion = document.createElement("input");
+    Object.assign(deduccion, { type: "checkbox", id: "cargador-deduccion", checked: estado.cargador.deduccion });
+    deduccion.dataset.cargador = "deduccion";
+    const fila = filaCampo(deduccion.id, "Deducción del 15 % en el IRPF (instalación terminada antes del 31/12/2026)", deduccion);
+    fila.dataset.modos = "propia gestor";
+    fila.classList.add("casilla");
+    panelCargador.append(fila);
+
+    const resumen = document.createElement("p");
+    resumen.id = "cargador-resumen";
+    resumen.className = "resumen-cargador";
+    panelCargador.append(resumen);
+  }
+
+  function pintarPanelCargador() {
+    const c = estado.cargador;
+    for (const fila of panelCargador.querySelectorAll("[data-modos]")) {
+      fila.hidden = !fila.dataset.modos.split(" ").includes(c.modo);
+    }
+    for (const control of panelCargador.querySelectorAll("[data-cargador]")) {
+      if (control === document.activeElement) continue;
+      if (control.type === "checkbox") control.checked = c[control.dataset.cargador];
+      else control.value = c[control.dataset.cargador];
+    }
+  }
+
+  function pintarResumenCargador(coste) {
+    const resumen = document.getElementById("cargador-resumen");
+    if (estado.cargador.modo === "ninguno") {
+      resumen.textContent = "Sin coste de instalación. Si no cargas en casa, baja también el % de carga en casa.";
+      return;
+    }
+    const partes = [`Instalación: ${euros.format(coste.bruto)}`];
+    if (coste.deduccion > 0) partes.push(` − ${euros.format(coste.deduccion)} de deducción = ${euros.format(coste.instalacion)}`);
+    partes.push(` · Gasto fijo: ${euros.format(coste.anual)}/año.`);
+    resumen.textContent = partes.join("") + " Se suma a cada coche eléctrico o híbrido enchufable.";
+  }
+
   function panelCoche(coche) {
     const panel = document.createElement("fieldset");
     panel.className = `panel coche c${coche.color}`;
@@ -276,6 +399,7 @@
       ["estado", "Estado", Object.entries(ESTADOS), coche.estado],
       ["modelo", "Modelo", [...MODELOS[coche.tipo].map((m) => [m.id, m.nombre]), ["personalizado", "Personalizado"]], coche.modelo],
     ];
+    if (coche.estado === "usado") selects.push(["vendedor", "Lo compras a", Object.entries(VENDEDORES), coche.vendedor]);
     for (const [campo, etiqueta, opciones, valor] of selects) {
       const select = desplegable(id(campo), opciones, valor);
       select.dataset.campo = campo;
@@ -339,6 +463,7 @@
         `<span class="etiqueta">${TIPOS[c.tipo].icono} ${escapar(c.nombre || "Coche")}${ganador ? " · el más barato" : ""}</span>` +
         `<span class="detalle">${escapar(descripcion(c))}</span>` +
         `<span class="valor">${euros.format(coche.total)}</span>` +
+        `<span class="mensual">≈ ${euros.format(coche.total / (datos.comun.anios * 12))}/mes de media</span>` +
         `<span class="detalle">${centimos.format(coche.costeKm)} por km en energía</span>` +
         `<span class="detalle">${extra}</span></div>`;
     }).join("");
@@ -434,7 +559,7 @@
     for (let k = 0; k <= 4; k++) {
       const v = (maximo / 4) * k;
       svg += `<line class="rejilla" x1="${m.izquierda}" x2="${ancho - m.derecha}" y1="${y(v)}" y2="${y(v)}"/>`;
-      svg += `<text class="eje" x="${m.izquierda - 8}" y="${y(v) + 4}" text-anchor="end">${numero.format(v / 1000)}k €</text>`;
+      svg += `<text class="eje" x="${m.izquierda - 8}" y="${y(v) + 4}" text-anchor="end">${decimal.format(v / 1000)}k €</text>`;
     }
     const pasoX = Math.max(1, Math.ceil(n / 10));
     for (let i = 0; i <= n; i += pasoX) {
@@ -481,8 +606,10 @@
 
   function actualizar() {
     pintarSelectores();
+    const cargador = Calculadora.costeCargador(estado.cargador);
+    pintarResumenCargador(cargador);
     const datos = {
-      comun: { ...estado.comun, anios: Math.max(1, Math.round(estado.comun.anios)), anioActual: ANIO_ACTUAL },
+      comun: { ...estado.comun, anios: Math.max(1, Math.round(estado.comun.anios)), anioActual: ANIO_ACTUAL, cargador },
       coches: estado.coches,
       referencia: estado.referencia,
     };
@@ -550,9 +677,11 @@
       estado.coches[i] = nuevoCoche(t.value, coche.estado, coche);
     } else if (t.dataset.campo === "estado") {
       coche.estado = t.value;
-      if (coche.modelo !== "personalizado") aplicarModelo(coche, coche.modelo);
+      if (coche.modelo !== "personalizado") aplicarModelo(coche, coche.modelo, true);
     } else if (t.dataset.campo === "modelo") {
-      aplicarModelo(coche, t.value);
+      aplicarModelo(coche, t.value, true);
+    } else if (t.dataset.campo === "vendedor") {
+      coche.vendedor = t.value;
     }
     pintarPaneles();
     actualizar();
@@ -593,13 +722,33 @@
     actualizar();
   });
 
-  document.getElementById("restablecer").addEventListener("click", () => {
-    try { localStorage.removeItem(CLAVE_GUARDADO); } catch (e) { /* sin guardado */ }
-    estadoPorDefecto();
-    pintarPanelComun();
-    pintarPaneles();
+  panelCargador.addEventListener("input", (ev) => {
+    const t = ev.target;
+    const clave = t.dataset.cargador;
+    if (!clave) return;
+    if (t.type === "checkbox") {
+      estado.cargador[clave] = t.checked;
+    } else if (t.tagName === "SELECT") {
+      estado.cargador[clave] = t.value;
+      // Al cambiar de potencia, propone el precio por metro de esa sección de cable.
+      if (clave === "potencia") estado.cargador.precioMetro = PRECIO_METRO[t.value];
+    } else {
+      estado.cargador[clave] = aNumero(t.value);
+    }
+    pintarPanelCargador();
     actualizar();
   });
+
+  function cargarEstado(crear) {
+    try { localStorage.removeItem(CLAVE_GUARDADO); } catch (e) { /* sin guardado */ }
+    crear();
+    pintarPanelComun();
+    pintarPanelCargador();
+    pintarPaneles();
+    actualizar();
+  }
+  document.getElementById("restablecer").addEventListener("click", () => cargarEstado(estadoPorDefecto));
+  document.getElementById("mi-caso").addEventListener("click", () => cargarEstado(estadoMiCaso));
 
   // --- Arranque -------------------------------------------------------------
 
@@ -607,6 +756,8 @@
   try { restaurado = restaurar(); } catch (e) { restaurado = false; }
   if (!restaurado) estadoPorDefecto();
   crearPanelComun();
+  crearPanelCargador();
+  pintarPanelCargador();
   pintarPaneles();
   actualizar();
 })();
