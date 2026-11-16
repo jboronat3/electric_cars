@@ -217,6 +217,7 @@
       ["gasolina", "skoda-octavia-combi"],
       ["electrico", "mg4-51"],
       ["electrico", "kia-e-niro-64"],
+      ["electrico", "mazda-mx30"],
       ["hibrido", "kia-niro-phev"],
     ]) estado.coches.push(nuevoCoche(tipo, "usado", {}, idModelo));
     estado.referencia = estado.coches[0].id;

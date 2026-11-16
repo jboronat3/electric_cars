@@ -25,8 +25,8 @@ Los resultados se recalculan al momento, y los datos se guardan en el navegador 
 
 | Tipo               | Modelo                       |
 |--------------------|------------------------------|
-| Eléctrico          | BYD Dolphin 60 kWh, MG4 51 kWh, Kia e-Niro 64 kWh |
-| Híbrido enchufable | BYD Atto 2 DM-i Boost, Kia Niro PHEV 1.6 GDi |
+| Eléctrico          | BYD Dolphin 60 kWh, MG4 51 kWh, Kia e-Niro 64 kWh, Mazda MX-30 35,5 kWh |
+| Híbrido enchufable | BYD Atto 2 DM-i Boost, Kia Niro PHEV 1.6 GDi, Mazda MX-30 R-EV |
 | Gasolina           | Skoda Octavia 1.5 TSI 150 CV, Skoda Octavia Combi 1.5 TSI 150 CV |
 
 Precios y consumos orientativos de España (octubre 2026); las ayudas son estimaciones. Los modelos sirven de plantilla para coches nuevos y usados; para añadir más, edita `modelos.js`.

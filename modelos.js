@@ -41,6 +41,18 @@ window.MODELOS = {
       },
       usado: { anioMatriculacion: 2020, kmActuales: 80000 },
     },
+    {
+      // Usados de 2021–2023 por 14.000–17.500 €. Batería pequeña: unos 170 km reales,
+      // suficiente para el día a día pero justo para viajes largos.
+      id: "mazda-mx30",
+      nombre: "Mazda MX-30 35,5 kWh",
+      valores: {
+        precio: 34000, ayudas: 0,
+        consumoKwh100: 18.5,
+        mantenimiento: 300, seguro: 500, impuesto: 25, depreciacion: 20,
+      },
+      usado: { anioMatriculacion: 2021, kmActuales: 50000 },
+    },
   ],
   hibrido: [
     {
@@ -63,6 +75,18 @@ window.MODELOS = {
         mantenimiento: 450, seguro: 500, impuesto: 30, depreciacion: 17,
       },
       usado: { anioMatriculacion: 2021, kmActuales: 80000 },
+    },
+    {
+      // Usados de 2024 por 22.000–25.000 €; unos 85 km eléctricos (WLTP). El motor
+      // rotativo solo genera electricidad y gasta bastante cuando entra.
+      id: "mazda-mx30-rev",
+      nombre: "Mazda MX-30 R-EV",
+      valores: {
+        precio: 36000, ayudas: 0,
+        consumoKwh100: 18, consumoL100: 6.5, porcentajeElectrico: 75,
+        mantenimiento: 400, seguro: 550, impuesto: 25, depreciacion: 20,
+      },
+      usado: { anioMatriculacion: 2024, kmActuales: 25000 },
     },
   ],
   gasolina: [
